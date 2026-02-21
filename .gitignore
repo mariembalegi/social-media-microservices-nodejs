@@ -1,0 +1,11 @@
+# Node modules
+node_modules/
+
+# Fichiers de configuration locaux
+.env
+
+# Logs
+*.log
+
+# Fichiers système Mac
+.DS_Store

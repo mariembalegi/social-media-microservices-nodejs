@@ -1,12 +1,15 @@
 {
   "name": "tp-microservices",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "api-gateway/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:gateway": "cd api-gateway && npm run dev",
+    "dev:user": "cd user-service && npm run dev",
+    "dev:post": "cd post-service && npm run dev",
+    "dev:all": "npm run dev:gateway && npm run dev:user & npm run dev:post"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["microservices", "nodejs", "mongodb"],
+  "author": "Mariem Balegi",
   "license": "ISC",
-  "description": ""
+  "description": "TP Architecture Microservices"
 }
