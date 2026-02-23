@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet= require('helmet');
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
+require('dotenv').config({path:'../.env'});
 
 const app = express();
 /*
@@ -109,7 +109,7 @@ next();
 
 // User Service
 app.use('/api/users', createProxyMiddleware({
-target: 'http://localhost:S{process.env.USER_SERVICE_PORT || 3001}',
+target: `http://localhost:${process.env.USER_SERVICE_PORT || 3001}`,
 changeOrigin: true,
 onError: (err, req, res) => {
 console.error('Erreur User Service:', err);
@@ -122,7 +122,7 @@ error: 'User Service indisponible'
 
 // Post Service
 app.use('/api/posts', createProxyMiddleware({
-target: 'http://localhost:${process.env.POST_SERVICE_PORT || 3002}',
+target: `http://localhost:${process.env.POST_SERVICE_PORT || 3002}`,
 changeOrigin: true,
 onError: (err, req, res) => {
 console.error('Erreur Post Service:', err);
