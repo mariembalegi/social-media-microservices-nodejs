@@ -21,8 +21,9 @@ methods: ['GET', 'POST', 'PUT', 'DELETE'],
 allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// 3. Parser JSON
-app.use(express.json());
+// 3. Parser JSON - RETIRÉ car le Gateway est un proxy
+// Les microservices parseront eux-mêmes le JSON
+// app.use(express.json());
 
 /** 
 * RATE LIMITING
@@ -111,6 +112,9 @@ next();
 app.use('/api/users', createProxyMiddleware({
 target: `http://localhost:${process.env.USER_SERVICE_PORT || 3001}`,
 changeOrigin: true,
+pathRewrite: {
+'^/api/users': ''
+},
 onError: (err, req, res) => {
 console.error('Erreur User Service:', err);
 res.status(503).json({
@@ -124,6 +128,9 @@ error: 'User Service indisponible'
 app.use('/api/posts', createProxyMiddleware({
 target: `http://localhost:${process.env.POST_SERVICE_PORT || 3002}`,
 changeOrigin: true,
+pathRewrite: {
+'^/api/posts': ''
+},
 onError: (err, req, res) => {
 console.error('Erreur Post Service:', err);
 res.status(503).json({
