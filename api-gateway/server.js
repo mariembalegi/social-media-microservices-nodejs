@@ -133,15 +133,17 @@ error: 'Post Service indisponible'
 }
 }));
 
-// Story Service (à implémenter)
-app.use('/api/stories', createProxyMiddleware({
-target: 'http://localhost:${process.env.STORY_SERVICE_PORT || 3003}',
+// Comment Service
+app.use('/api/comments', createProxyMiddleware({
+target: `http://localhost:${process.env.COMMENT_SERVICE_PORT || 3004}`,
 changeOrigin: true,
+pathRewrite: {
+'^/api/comments': ''
+},
 onError: (err, req, res) => {
-console.error('Erreur Story Service:', err);
+console.error('Erreur Comment Service:', err);
 res.status(503).json({
-error: 'Story Service indisponible'
-
+error: 'Comment Service indisponible'
 });
 }
 }));
@@ -159,7 +161,7 @@ timestamp: new Date(),
 services: {
 users: `http://localhost:${process.env.USER_SERVICE_PORT}`,
 posts: `http://localhost:${process.env.POST_SERVICE_PORT}`,
-stories: `http://localhost:${process.env.STORY_SERVICE_PORT}`
+comments: `http://localhost:${process.env.COMMENT_SERVICE_PORT}`
 }
 });
 });
@@ -192,5 +194,5 @@ console.log(`http://localhost:${PORT}`);
 console.log("Services proxifiés:");
 console.log(` - User Service: http://localhost:${process.env.USER_SERVICE_PORT}`);
 console.log(` - Post Service: http://localhost:${process.env.POST_SERVICE_PORT}`);
-console.log(` - Story Service: http://localhost:${process.env.STORY_SERVICE_PORT}`);    
+console.log(` - Comment Service: http://localhost:${process.env.COMMENT_SERVICE_PORT}`);    
 });

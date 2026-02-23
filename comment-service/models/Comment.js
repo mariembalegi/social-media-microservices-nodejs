@@ -1,24 +1,51 @@
 const mongoose = require('mongoose');
 
-const storySchema = new mongoose.Schema({
+/**
+ * SCHÉMA COMMENT
+ * Représente un commentaire sur un post
+ */
+const commentSchema = new mongoose.Schema({
+  // Référence vers le post commenté
+  postId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'Post' // Référence au modèle Post (dans post-service)
+  },
+  
+  // Référence vers l'utilisateur qui a commenté
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true
+    required: true,
+    ref: 'User' // Référence au modèle User (dans user-service)
   },
+  
+  // Contenu du commentaire
   content: {
     type: String,
-    required: true,
-    maxlength: 500
+    required: [true, 'Le contenu est requis'],
+    maxlength: [500, 'Le commentaire ne peut dépasser 500 caractères'],
+    trim: true
   },
-  imageUrl: {
-    type: String
+  
+  // Commentaire parent (pour les réponses)
+  parentCommentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    default: null,
+    ref: 'Comment' // Référence à lui-même pour les réponses
   },
-  expiresAt: {
-    type: Date,
-    default: () => new Date(Date.now() + 24*60*60*1000) // expire après 24h
+  
+  // Nombre de likes
+  likesCount: {
+    type: Number,
+    default: 0,
+    min: 0
   }
 }, {
   timestamps: true // createdAt et updatedAt automatiques
 });
 
-module.exports = mongoose.model('Story', storySchema);
+// Index pour améliorer les performances
+commentSchema.index({ postId: 1, createdAt: -1 });
+commentSchema.index({ userId: 1, createdAt: -1 });
+
+module.exports = mongoose.model('Comment', commentSchema);
