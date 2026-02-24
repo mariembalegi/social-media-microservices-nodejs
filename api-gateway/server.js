@@ -70,7 +70,7 @@ error: 'Token manquant'
 });
 }
 // Format: "Bearer TOKEN"
-const token = authHeader.split('')[1];
+const token = authHeader.split(' ')[1];
 
 if (!token) {
 return res.status(401).json({
