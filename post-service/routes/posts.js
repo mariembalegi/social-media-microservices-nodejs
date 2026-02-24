@@ -10,15 +10,23 @@ const Post = require('../models/Post');
 
 router.post('/', async (req, res) => {
 try {
-const { userId, content, images, visibility } = req.body;
+// Récupérer le userId depuis le header ajouté par le gateway
+const userId = req.headers['x-user-id'];
+const { content, images, visibility } = req.body;
 
 // Validation
-if (!userId || !content) {
-return res.status(400).json({
-error: 'userld et content sont requis'
-
+if (!userId) {
+return res.status(401).json({
+error: 'Authentification requise'
 });
 }
+
+if (!content) {
+return res.status(400).json({
+error: 'Le contenu est requis'
+});
+}
+
 // Créer le post
 const post = new Post({
 userId,

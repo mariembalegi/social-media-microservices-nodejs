@@ -80,9 +80,14 @@ error: 'Format de token invalide'
 try {
 // Vérifier et décoder le token
 const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+// Transmettre le userId dans les headers pour le microservice
+req.headers['x-user-id'] = decoded.userId;
 req.user = decoded; // Ajouter les infos user à la requête
+
 next();
 } catch (error) {
+console.error('Erreur JWT:', error.message);
 return res.status(401).json({
 error: 'Token invalide ou expiré'
 });
@@ -130,6 +135,12 @@ target: `http://localhost:${process.env.POST_SERVICE_PORT || 3002}`,
 changeOrigin: true,
 pathRewrite: {
 '^/api/posts': ''
+},
+onProxyReq: (proxyReq, req, res) => {
+// Transmettre le userId au microservice
+if (req.headers['x-user-id']) {
+proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
+}
 },
 onError: (err, req, res) => {
 console.error('Erreur Post Service:', err);
