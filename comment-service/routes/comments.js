@@ -4,24 +4,25 @@ const Comment = require('../models/Comment');
 const axios = require('axios');
 
 /**
- * ROUTE : POST /api/comments
- * Créer un commentaire
+ * ROUTE : POST /posts/:postId/comments
+ * Créer un commentaire pour un post (RESTful)
  */
-router.post('/', async (req, res) => {
+router.post('/posts/:postId/comments', async (req, res) => {
   try {
-    // Récupérer le userId depuis le header ajouté par le gateway
     const userId = req.headers['x-user-id'];
-    const { postId, content, parentCommentId } = req.body;
+    const postId = req.params.postId;
+    const { content } = req.body;
 
+    // Validation
     if (!userId) {
       return res.status(401).json({
         error: 'Authentification requise'
       });
     }
 
-    if (!postId || !content) {
+    if (!content) {
       return res.status(400).json({
-        error: 'postId et content sont requis'
+        error: 'Le contenu est requis'
       });
     }
 
@@ -29,11 +30,10 @@ router.post('/', async (req, res) => {
     const comment = await Comment.create({
       postId,
       userId,
-      content,
-      parentCommentId: parentCommentId || null
+      content
     });
 
-    // 🔥 Appel au Post Service pour incrémenter le compteur
+    // Appel au Post Service pour incrémenter le compteur
     try {
       await axios.post(
         `http://localhost:${process.env.POST_SERVICE_PORT || 3002}/${postId}/increment-comments`
@@ -46,36 +46,103 @@ router.post('/', async (req, res) => {
       message: 'Commentaire créé',
       comment
     });
-
   } catch (error) {
     console.error('Erreur création commentaire:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
+/**
+ * ROUTE : POST /:postId/comments
+ * Créer un commentaire (via gateway qui a déjà consommé /api/posts)
+ */
+router.post('/:postId/comments', async (req, res) => {
+  try {
+    const userId = req.headers['x-user-id'];
+    const postId = req.params.postId;
+    const { content } = req.body;
+
+    // Validation
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentification requise'
+      });
+    }
+
+    if (!content) {
+      return res.status(400).json({
+        error: 'Le contenu est requis'
+      });
+    }
+
+    // Créer le commentaire
+    const comment = await Comment.create({
+      postId,
+      userId,
+      content
+    });
+
+    // Appel au Post Service pour incrémenter le compteur
+    try {
+      await axios.post(
+        `http://localhost:${process.env.POST_SERVICE_PORT || 3002}/${postId}/increment-comments`
+      );
+    } catch (err) {
+      console.warn('Erreur incrémentation compteur:', err.message);
+    }
+
+    res.status(201).json({
+      message: 'Commentaire créé',
+      comment
+    });
+  } catch (error) {
+    console.error('Erreur création commentaire:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 /**
- * ROUTE : GET /api/comments/post/:postId
- * Récupérer les commentaires d'un post
+ * ROUTE : GET /posts/:postId/comments
+ * Récupérer tous les commentaires d'un post (RESTful)
  */
-router.get('/post/:postId', async (req, res) => {
+router.get('/posts/:postId/comments', async (req, res) => {
   try {
-    const comments = await Comment.find({
-      postId: req.params.postId,
-      parentCommentId: null // uniquement commentaires principaux
-    }).sort({ createdAt: -1 });
+    const postId = req.params.postId;
+    const comments = await Comment.find({ postId })
+      .sort({ createdAt: -1 });
 
-    res.json(comments);
-
+    res.json({
+      comments,
+      count: comments.length
+    });
   } catch (error) {
     console.error('Erreur récupération commentaires:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
+/**
+ * ROUTE : GET /:postId/comments
+ * Récupérer tous les commentaires d'un post (via gateway)
+ */
+router.get('/:postId/comments', async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const comments = await Comment.find({ postId })
+      .sort({ createdAt: -1 });
+
+    res.json({
+      comments,
+      count: comments.length
+    });
+  } catch (error) {
+    console.error('Erreur récupération commentaires:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 /**
- * ROUTE : DELETE /api/comments/:id
+ * ROUTE : DELETE /:id
  * Supprimer un commentaire
  */
 router.delete('/:id', async (req, res) => {

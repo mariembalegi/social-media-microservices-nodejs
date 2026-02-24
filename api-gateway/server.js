@@ -129,6 +129,27 @@ error: 'User Service indisponible'
 
 }));
 
+// Commentaires via posts (RESTful) - DOIT être AVANT /api/posts
+app.use('/api/posts', (req, res, next) => {
+  // Si le chemin se termine par /comments, rediriger vers le comment service
+  if (req.path.includes('/comments')) {
+    const proxy = createProxyMiddleware({
+      target: `http://localhost:${process.env.COMMENT_SERVICE_PORT || 3004}`,
+      changeOrigin: true,
+      pathRewrite: {
+        '^/api': ''  // Garde /posts dans le chemin
+      },
+      onProxyReq: (proxyReq, req, res) => {
+        if (req.headers['x-user-id']) {
+          proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
+        }
+      }
+    });
+    return proxy(req, res, next);
+  }
+  next();
+});
+
 // Post Service
 app.use('/api/posts', createProxyMiddleware({
 target: `http://localhost:${process.env.POST_SERVICE_PORT || 3002}`,
@@ -147,27 +168,6 @@ console.error('Erreur Post Service:', err);
 res.status(503).json({
 error: 'Post Service indisponible'
 
-});
-}
-}));
-
-// Comment Service
-app.use('/api/comments', createProxyMiddleware({
-target: `http://localhost:${process.env.COMMENT_SERVICE_PORT || 3004}`,
-changeOrigin: true,
-pathRewrite: {
-'^/api/comments': ''
-},
-onProxyReq: (proxyReq, req, res) => {
-// Transmettre le userId au microservice
-if (req.headers['x-user-id']) {
-proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
-}
-},
-onError: (err, req, res) => {
-console.error('Erreur Comment Service:', err);
-res.status(503).json({
-error: 'Comment Service indisponible'
 });
 }
 }));
