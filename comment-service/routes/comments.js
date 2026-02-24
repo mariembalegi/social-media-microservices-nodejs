@@ -9,11 +9,19 @@ const axios = require('axios');
  */
 router.post('/', async (req, res) => {
   try {
-    const { postId, userId, content, parentCommentId } = req.body;
+    // Récupérer le userId depuis le header ajouté par le gateway
+    const userId = req.headers['x-user-id'];
+    const { postId, content, parentCommentId } = req.body;
 
-    if (!postId || !userId || !content) {
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentification requise'
+      });
+    }
+
+    if (!postId || !content) {
       return res.status(400).json({
-        error: 'postId, userId et content sont requis'
+        error: 'postId et content sont requis'
       });
     }
 
@@ -72,7 +80,14 @@ router.get('/post/:postId', async (req, res) => {
  */
 router.delete('/:id', async (req, res) => {
   try {
-    const { userId } = req.body;
+    // Récupérer le userId depuis le header ajouté par le gateway
+    const userId = req.headers['x-user-id'];
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentification requise'
+      });
+    }
 
     const comment = await Comment.findById(req.params.id);
     if (!comment) {
@@ -139,7 +154,15 @@ router.post('/:id/like', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    const { userId, content } = req.body;
+    // Récupérer le userId depuis le header ajouté par le gateway
+    const userId = req.headers['x-user-id'];
+    const { content } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentification requise'
+      });
+    }
 
     if (!content) {
       return res.status(400).json({

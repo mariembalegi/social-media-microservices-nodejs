@@ -158,6 +158,12 @@ changeOrigin: true,
 pathRewrite: {
 '^/api/comments': ''
 },
+onProxyReq: (proxyReq, req, res) => {
+// Transmettre le userId au microservice
+if (req.headers['x-user-id']) {
+proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
+}
+},
 onError: (err, req, res) => {
 console.error('Erreur Comment Service:', err);
 res.status(503).json({
