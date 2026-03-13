@@ -118,7 +118,13 @@ app.use('/api/users', createProxyMiddleware({
 target: `http://localhost:${process.env.USER_SERVICE_PORT || 3001}`,
 changeOrigin: true,
 pathRewrite: {
-'^/api/users': ''
+'^/api/users': '/users'
+},
+onProxyReq: (proxyReq, req, res) => {
+// Transmettre le userId au microservice
+if (req.headers['x-user-id']) {
+proxyReq.setHeader('x-user-id', req.headers['x-user-id']);
+}
 },
 onError: (err, req, res) => {
 console.error('Erreur User Service:', err);
@@ -126,7 +132,6 @@ res.status(503).json({
 error: 'User Service indisponible'
 });
 }
-
 }));
 
 // Commentaires via posts (RESTful) - DOIT être AVANT /api/posts

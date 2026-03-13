@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
+const axios = require('axios');
+require('dotenv').config({path:'../.env'});
 
 /**
 
@@ -75,6 +77,58 @@ pages: Math.ceil(total / limit)
 } catch (error) {
     console.error('Erreur récupération posts:', error);
     res.status(500).json({error: error.message});
+}
+});
+
+/**
+* ROUTE : GET /api/posts/:id/details
+* Aggregator Pattern: Récupérer un post avec l'auteur et les commentaires
+*/
+router.get('/:id/details', async (req, res) => {
+try {
+const postId = req.params.id;
+
+// 1. Récupérer le post depuis la base de données
+const post = await Post.findById(postId);
+
+if (!post) {
+return res.status(404).json({ error: 'Post non trouvé' });
+}
+
+// 2. Appeler le user-service pour récupérer les informations de l'auteur
+let author = null;
+try {
+const userServiceUrl = `http://localhost:${process.env.USER_SERVICE_PORT || 3001}/${post.userId}`;
+const authorResponse = await axios.get(userServiceUrl);
+author = authorResponse.data;
+} catch (error) {
+console.error('Erreur lors de la récupération de l\'auteur:', error.message);
+// Si le user-service est indisponible, on continue avec author = null
+author = { error: 'Service utilisateur indisponible' };
+}
+
+// 3. Appeler le comment-service pour récupérer les commentaires
+let comments = [];
+try {
+const commentServiceUrl = `http://localhost:${process.env.COMMENT_SERVICE_PORT || 3004}/posts/${postId}/comments`;
+const commentsResponse = await axios.get(commentServiceUrl);
+comments = commentsResponse.data.comments || commentsResponse.data;
+} catch (error) {
+console.error('Erreur lors de la récupération des commentaires:', error.message);
+// Si le comment-service est indisponible, on continue avec comments vide
+comments = { error: 'Service commentaires indisponible' };
+}
+
+// 4. Combiner les réponses
+res.json({
+post: post,
+author: author,
+comments: comments
+});
+
+} catch (error) {
+console.error('Erreur dans l\'endpoint aggregator:', error);
+res.status(500).json({ error: error.message });
 }
 });
 

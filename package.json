@@ -6,7 +6,8 @@
     "dev:gateway": "cd api-gateway && npm run dev",
     "dev:user": "cd user-service && npm run dev",
     "dev:post": "cd post-service && npm run dev",
-    "dev:all": "npm run dev:gateway && npm run dev:user & npm run dev:post"
+    "dev:comment": "cd comment-service && npm run dev",
+    "dev:all": "npm run dev:gateway && npm run dev:user && npm run dev:post && npm run dev:comment"
   },
   "keywords": ["microservices", "nodejs", "mongodb"],
   "author": "Mariem Balegi",
